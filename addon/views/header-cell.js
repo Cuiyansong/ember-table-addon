@@ -11,7 +11,7 @@ StyleBindingsMixin, RegisterTableComponentMixin, {
   // TODO: Doc
   templateName: 'header-cell',
   classNames: ['ember-table-cell', 'ember-table-header-cell'],
-  classNameBindings: ['column.isSortable:sortable', 'column.textAlign'],
+  classNameBindings: ['column.isSortable:sortable', 'column.textAlign', 'column.cellStyle'],
   styleBindings: ['width', 'height'],
 
   // ---------------------------------------------------------------------------
@@ -23,7 +23,10 @@ StyleBindingsMixin, RegisterTableComponentMixin, {
   minWidth: Ember.computed.alias('column.minWidth'),
   maxWidth: Ember.computed.alias('column.maxWidth'),
   nextResizableColumn: Ember.computed.alias('column.nextResizableColumn'),
-  height: Ember.computed.alias('tableComponent._headerHeight'),
+  height: Ember.computed(function(){
+
+    return this.get('column').get('headerCellHeight') || this.get('tableComponent._headerHeight');
+  }),
 
   effectiveMinWidth: Ember.computed(function() {
     if (this.get('tableComponent.columnMode') === 'standard') {

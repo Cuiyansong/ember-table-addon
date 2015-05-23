@@ -28,6 +28,7 @@ StyleBindingsMixin, ResizeHandlerMixin, {
   // TODO(new-api): Rename to `data`
   columns: null,
 
+  columnGroups: null,
   // The number of fixed columns on the left side of the table. Fixed columns
   // are always visible, even when the table is scrolled horizontally.
   numFixedColumns: 0,
@@ -181,7 +182,7 @@ StyleBindingsMixin, ResizeHandlerMixin, {
   }).property('columns.@each', 'numFixedColumns'),
 
   tableColumns: Ember.computed(function() {
-    var columns = this.get('columns');
+    var columns = this.get('_flattenedColumns') || this.get('columns');
     if (!columns) {
       return Ember.A();
     }
@@ -197,6 +198,31 @@ StyleBindingsMixin, ResizeHandlerMixin, {
       col.set('nextResizableColumn', _this.getNextResizableColumn(columns, i));
     });
   },
+
+  hasColumnGroup: function () {
+    return this.get('columns')
+      .getEach('innerColumns')
+      .any(function (i) {
+        return !!i;
+      });
+  }.property(),
+
+  _flattenedColumns: function() {
+    var columns;
+    if(this.get('hasColumnGroup')) {
+      columns = this.get('columns') || Ember.A();
+      this.set('columnGroups', columns);
+      return columns.reduce(function(result, col) {
+        var innerColumns = col.get('innerColumns');
+        if (innerColumns) {
+          return result.concat(innerColumns);
+        } else {
+          result.push(col);
+          return result;
+        }
+      }, []);
+    }
+  }.property('columns.@each'),
 
   getNextResizableColumn: function(columns, index) {
     var column;
