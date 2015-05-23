@@ -4,10 +4,17 @@ import LazyArray from 'ember-table/models/lazy-array';
 
 var loadedCount = 0;
 var pendingPromises = [];
+<<<<<<< HEAD
 var chunkSize = 100;
 var lazyArray;
 
 function getChunk(chunkIndex) {
+=======
+var initSize = 100;
+var lazyArray;
+
+function getNextChunk() {
+>>>>>>> master
   var promise = new Ember.RSVP.Promise(function (resolve) {
     Ember.run.later(function () {
       var chunk = [];
@@ -22,7 +29,10 @@ function getChunk(chunkIndex) {
   });
   pendingPromises.push(promise);
   return promise;
+<<<<<<< HEAD
 
+=======
+>>>>>>> master
 }
 
 function accessObject(idx) {
@@ -70,7 +80,22 @@ test('Should load first chunk when accessing the 1th loans', function (assert) {
   });
 });
 
+<<<<<<< HEAD
 test('Should load 1 chunks When accessing the 1th then 89th loans', function (assert) {
+=======
+module('Lazy Array TotalCount Of 200', {
+  beforeEach: function () {
+    loadedCount = 0;
+    lazyArray = new LazyArray(200, initSize, getNextChunk);
+  },
+
+  afterEach: function () {
+    lazyArray = null;
+  }
+});
+
+test('Should load first 100 loans when accessing the 1th loans', function (assert) {
+>>>>>>> master
   accessObject(1);
   accessObject(89);
 
@@ -182,6 +207,7 @@ test('Should not notify content length observer when load next chunk', function 
   });
 });
 
+<<<<<<< HEAD
 test('Should load first chunk only one time When access object 1 then 2', function (assert) {
   accessObject(1);
   accessObject(2);
@@ -207,10 +233,24 @@ module('Lazy Array TotalCount Of 300 And chunk size 100', {
   }
 });
 
+=======
+module('Lazy Array TotalCount Of 300', {
+  beforeEach: function () {
+    loadedCount = 0;
+    lazyArray = new LazyArray(300, initSize, getNextChunk);
+  },
+
+  afterEach: function () {
+    lazyArray = null;
+  }
+});
+
+>>>>>>> master
 test('Should load the 289th when access 190th', function (assert) {
   accessObject(190);
 
   return asyncAssert(function () {
+<<<<<<< HEAD
     assert.ok(accessObject(289).get('isLoaded'), '289th should be loaded');
   });
 });
@@ -263,3 +303,8 @@ test('Should allow String type for parameter totalCount', function(assert) {
   });
 });
 
+=======
+    assert.ok(loadedCount > 289, '289th should be loaded');
+  });
+});
+>>>>>>> master
