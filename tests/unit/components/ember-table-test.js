@@ -191,3 +191,23 @@ test('Should reorder inner column when dragging inner column', function(assert) 
   assert.equal(firstGroup.innerColumns[1], firstCol);
   assert.equal(firstGroup.innerColumns[0], secondCol);
 });
+
+
+function getGroupHeader(table, groupIndex){
+  return table.$('.ember-table-header-container ' +
+    '.ember-table-header-block:nth-child('+ groupIndex+1+') ' +
+    '.ember-table-header-row:nth-child(1) ' +
+    '.ember-table-content');
+}
+
+test('Should reorder with entire group when dragging the column group header', function(assert) {
+  var component = setEmberTableWithGroup(this);
+  var firstGroup = component.columns[1];
+
+  Ember.run(function () {
+    component.onColumnSort(firstGroup, 0);
+  });
+
+  var group = getGroupHeader(this, 0);
+  assert.ok(group.text().trim() === firstGroup.headerCellName, "Should be header cell name of first group");
+});

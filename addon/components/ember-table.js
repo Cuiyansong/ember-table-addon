@@ -5,613 +5,614 @@ import RowArrayController from 'ember-table/controllers/row-array';
 import TableRow from 'ember-table/controllers/row';
 
 export default Ember.Component.extend(
-StyleBindingsMixin, ResizeHandlerMixin, {
-  classNames: ['ember-table-tables-container'],
-  classNameBindings: ['enableContentSelection:ember-table-content-selectable'],
+  StyleBindingsMixin, ResizeHandlerMixin, {
+    classNames: ['ember-table-tables-container'],
+    classNameBindings: ['enableContentSelection:ember-table-content-selectable'],
 
-  // ---------------------------------------------------------------------------
-  // API - Inputs
-  // ---------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------
+    // API - Inputs
+    // ---------------------------------------------------------------------------
 
-  // Values which are bound to the table's style attr. See
-  // `Ember.StyleBindingsMixin` documentation for more details.
-  styleBindings: ['height'],
+    // Values which are bound to the table's style attr. See
+    // `Ember.StyleBindingsMixin` documentation for more details.
+    styleBindings: ['height'],
 
-  // An array of row objects. Usually a hash where the keys are column names
-  // and the values are the rows's values. However, could be any object, since
-  // each column can define a function to return the column value given the row
-  // object. See `Ember.Table.ColumnDefinition.getCellContent`.
-  content: null,
+    // An array of row objects. Usually a hash where the keys are column names
+    // and the values are the rows's values. However, could be any object, since
+    // each column can define a function to return the column value given the row
+    // object. See `Ember.Table.ColumnDefinition.getCellContent`.
+    content: null,
 
-  // An array of column definitions: see `Ember.Table.ColumnDefinition`. Allows
-  // each column to have its own configuration.
-  // TODO(new-api): Rename to `data`
-  columns: null,
+    // An array of column definitions: see `Ember.Table.ColumnDefinition`. Allows
+    // each column to have its own configuration.
+    // TODO(new-api): Rename to `data`
+    columns: null,
 
-  columnGroups: null,
-  // The number of fixed columns on the left side of the table. Fixed columns
-  // are always visible, even when the table is scrolled horizontally.
-  numFixedColumns: 0,
+    columnGroups: null,
+    // The number of fixed columns on the left side of the table. Fixed columns
+    // are always visible, even when the table is scrolled horizontally.
+    numFixedColumns: 0,
 
-  // The number of footer rows in the table. Footer rows appear at the bottom of
-  // the table and are always visible.
-  // TODO(new-api): Rename to `numFooterRows`
-  numFooterRow: 0,
+    // The number of footer rows in the table. Footer rows appear at the bottom of
+    // the table and are always visible.
+    // TODO(new-api): Rename to `numFooterRows`
+    numFooterRow: 0,
 
-  // The row height in pixels. A consistent row height is necessary to calculate
-  // which rows are being shown, to enable lazy rendering.
-  // TODO: Currently must be kept in sync with the LESS file.
-  rowHeight: 30,
+    // The row height in pixels. A consistent row height is necessary to calculate
+    // which rows are being shown, to enable lazy rendering.
+    // TODO: Currently must be kept in sync with the LESS file.
+    rowHeight: 30,
 
-  // The minimum header height in pixels. Headers will grow in height if given
-  // more content than they can display.
-  // TODO: Currently must be kept in sync with the LESS file.
-  minHeaderHeight: 30,
+    // The minimum header height in pixels. Headers will grow in height if given
+    // more content than they can display.
+    // TODO: Currently must be kept in sync with the LESS file.
+    minHeaderHeight: 30,
 
-  // The footer height in pixels.
-  // TODO: Currently must be kept in sync with the LESS file.
-  footerHeight: 30,
+    // The footer height in pixels.
+    // TODO: Currently must be kept in sync with the LESS file.
+    footerHeight: 30,
 
-  // Enables or disables the header block.
-  hasHeader: true,
+    // Enables or disables the header block.
+    hasHeader: true,
 
-  // Enables or disables the footer block.
-  // TODO(new-api): Control this via `numFooterRows` and remove from API
-  hasFooter: true,
+    // Enables or disables the footer block.
+    // TODO(new-api): Control this via `numFooterRows` and remove from API
+    hasFooter: true,
 
-  enableColumnReorder: true,
+    enableColumnReorder: true,
 
-  // Allow users to select the content of table cells.
-  enableContentSelection: false,
+    // Allow users to select the content of table cells.
+    enableContentSelection: false,
 
-  // Sets which column resizing behavior to use. Possible values are
-  // <code>'standard'</code> (resizing a column pushes or pulls all other
-  // columns) and <code>'fluid'</code> (resizing a column steals width from
-  // neighboring columns).
-  columnMode: 'standard',
+    // Sets which column resizing behavior to use. Possible values are
+    // <code>'standard'</code> (resizing a column pushes or pulls all other
+    // columns) and <code>'fluid'</code> (resizing a column steals width from
+    // neighboring columns).
+    columnMode: 'standard',
 
-  // Sets which row selection behavior to follow. Possible values are 'none'
-  // (clicking on a row does nothing), 'single' (clicking on a row selects it
-  // and deselects other rows), and 'multiple' (multiple rows can be selected
-  // through ctrl/cmd-click or shift-click).
-  selectionMode: 'single',
+    // Sets which row selection behavior to follow. Possible values are 'none'
+    // (clicking on a row does nothing), 'single' (clicking on a row selects it
+    // and deselects other rows), and 'multiple' (multiple rows can be selected
+    // through ctrl/cmd-click or shift-click).
+    selectionMode: 'single',
 
-  setSortFn: null,
+    setSortFn: null,
 
-  // ---------------------------------------------------------------------------
-  // API - Outputs
-  // ---------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------
+    // API - Outputs
+    // ---------------------------------------------------------------------------
 
-  // An array of the rows currently selected. If `selectionMode` is set to
-  // 'single', the array will contain either one or zero elements.
-  selection: Ember.computed(function(key, val) {
-    var selectionMode = this.get('selectionMode');
-    if (arguments.length > 1 && val) {
-      this.get('persistedSelection').clear();
-      this.get('rangeSelection').clear();
+    // An array of the rows currently selected. If `selectionMode` is set to
+    // 'single', the array will contain either one or zero elements.
+    selection: Ember.computed(function (key, val) {
+      var selectionMode = this.get('selectionMode');
+      if (arguments.length > 1 && val) {
+        this.get('persistedSelection').clear();
+        this.get('rangeSelection').clear();
+        switch (selectionMode) {
+          case 'single':
+            this.get('persistedSelection').addObject(val);
+            break;
+          case 'multiple':
+            this.get('persistedSelection').addObjects(val);
+        }
+      }
+      var selection = this.get('persistedSelection').copy().addObjects(this.get('rangeSelection'));
       switch (selectionMode) {
+        case 'none':
+          return null;
         case 'single':
-          this.get('persistedSelection').addObject(val);
-          break;
+          return selection[0] || null;
         case 'multiple':
-          this.get('persistedSelection').addObjects(val);
+          return selection;
       }
-    }
-    var selection = this.get('persistedSelection').copy().addObjects(this.get('rangeSelection'));
-    switch (selectionMode) {
-      case 'none':
-        return null;
-      case 'single':
-        return selection[0] || null;
-      case 'multiple':
-        return selection;
-    }
-  }).property('persistedSelection.[]', 'rangeSelection.[]', 'selectionMode'),
+    }).property('persistedSelection.[]', 'rangeSelection.[]', 'selectionMode'),
 
-  // ---------------------------------------------------------------------------
-  // Internal properties
-  // ---------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------
+    // Internal properties
+    // ---------------------------------------------------------------------------
 
-  // Special flag used by child views to look up this component using
-  // nearestWithProperty()
-  isEmberTable: true,
+    // Special flag used by child views to look up this component using
+    // nearestWithProperty()
+    isEmberTable: true,
 
-  columnsFillTable: true,
+    columnsFillTable: true,
 
-  init: function() {
-    this._super();
-    if (!Ember.$.ui) {
-      throw 'Missing dependency: jquery-ui';
-    }
-    if (!Ember.$().mousewheel) {
-      throw 'Missing dependency: jquery-mousewheel';
-    }
-    if (!Ember.$().antiscroll) {
-      throw 'Missing dependency: antiscroll.js';
-    }
-    return this.prepareTableColumns();
-  },
-
-  _reloadBody: false,
-
-  // TODO(azirbel): Document
-  actions: {
-    addColumn: Ember.K,
-    sortByColumn: function(column){
-      var sortFn = column.sortFn();
-      if(sortFn){
-        var content = this.get('content');
-        this.sendAction('setSortFn', column);
-        content.sort(sortFn);
-        this.set('_reloadBody', !this.get('_reloadBody'));
-        Ember.run.next(this, this.updateLayout);
+    init: function () {
+      this._super();
+      if (!Ember.$.ui) {
+        throw 'Missing dependency: jquery-ui';
       }
-    }
-  },
+      if (!Ember.$().mousewheel) {
+        throw 'Missing dependency: jquery-mousewheel';
+      }
+      if (!Ember.$().antiscroll) {
+        throw 'Missing dependency: antiscroll.js';
+      }
+      return this.prepareTableColumns();
+    },
 
-  height: Ember.computed.alias('_tablesContainerHeight'),
+    _reloadBody: false,
 
-  // TODO(new-api): eliminate view alias
-  // specify the view class to use for rendering the table rows
-  tableRowView: 'table-row',
-  tableRowViewClass: Ember.computed.alias('tableRowView'),
-
-  onColumnSort: function(column, newIndex) {
-    // Fixed columns are not affected by column reordering
-    var numFixedColumns = this.get('fixedColumns.length');
-    var columns = this.get('columns');
-    if (columns.indexOf(column) !== -1) {
-      columns.removeObject(column);
-      columns.insertAt(numFixedColumns + newIndex, column);
-    }
-    else {
-      Ember.A(columns)
-        .filterBy('isGroup', true)
-        .invoke('reorder', newIndex, column);
-      this.set("_innerColumnReordered", !this.get('_innerColumnReordered'));
-      //for (let i = 0; i < columns.length; i++) {
-      //  if (columns[i].get('isGroup')) {
-      //    columns[i].reorder(newIndex, column);
-      //  }
-      //}
-      //this.set("_innerColumnReordered", column);
-    }
-    return this.prepareTableColumns();
-  },
-
-  // An array of Ember.Table.Row computed based on `content`
-  bodyContent: Ember.computed(function() {
-    return RowArrayController.create({
-      target: this,
-      parentController: this,
-      container: this.get('container'),
-      itemController: TableRow,
-      content: this.get('content')
-    });
-  }).property('content.[]', '_reloadBody'),
-
-  // An array of Ember.Table.Row
-  footerContent: Ember.computed(function(key, value) {
-    if (value) {
-      return value;
-    } else {
-      return Ember.A();
-    }
-  }).property(),
-
-  fixedColumns: Ember.computed(function() {
-    var columns = this.get('columns');
-    if (!columns) {
-      return Ember.A();
-    }
-    var numFixedColumns = this.get('numFixedColumns') || 0;
-    return columns.slice(0, numFixedColumns) || [];
-  }).property('columns.@each', 'numFixedColumns'),
-
-  tableColumns: Ember.computed(function() {
-    var columns = this.get('_flattenedColumns') || this.get('columns');
-    if (!columns) {
-      return Ember.A();
-    }
-    var numFixedColumns = this.get('numFixedColumns') || 0;
-    return columns.slice(numFixedColumns, columns.get('length')) || [];
-  }).property('columns.@each', 'numFixedColumns', "_innerColumnReordered"),
-
-  prepareTableColumns: function() {
-    var _this = this;
-    var columns = this.get('columns') || Ember.A();
-    columns.setEach('controller', this);
-    columns.forEach(function(col, i) {
-      col.set('nextResizableColumn', _this.getNextResizableColumn(columns, i));
-    });
-  },
-
-  hasColumnGroup: function () {
-    return this.get('columns')
-      .getEach('innerColumns')
-      .any(function (i) {
-        return !!i;
-      });
-  }.property(),
-
-  _flattenedColumns: function() {
-    var columns;
-    if(this.get('hasColumnGroup')) {
-      columns = this.get('columns') || Ember.A();
-      this.set('columnGroups', columns);
-      return columns.reduce(function(result, col) {
-        var innerColumns = col.get('innerColumns');
-        if (innerColumns) {
-          return result.concat(innerColumns);
-        } else {
-          result.push(col);
-          return result;
+    // TODO(azirbel): Document
+    actions: {
+      addColumn: Ember.K,
+      sortByColumn: function (column) {
+        var sortFn = column.sortFn();
+        if (sortFn) {
+          var content = this.get('content');
+          this.sendAction('setSortFn', column);
+          content.sort(sortFn);
+          this.set('_reloadBody', !this.get('_reloadBody'));
+          Ember.run.next(this, this.updateLayout);
         }
-      }, []);
-    }
-  }.property('columns.@each', '_innerColumnReordered'),
-
-  getNextResizableColumn: function(columns, index) {
-    var column;
-    while (index < columns.length) {
-      index += 1;
-      column = columns.objectAt(index);
-      if (column != null && column.get('isResizable')) {
-        return column;
       }
-    }
-    return null;
-  },
+    },
 
-  // ---------------------------------------------------------------------------
-  // View concerns
-  // ---------------------------------------------------------------------------
+    height: Ember.computed.alias('_tablesContainerHeight'),
 
-  didInsertElement: function() {
-    this._super();
-    this.set('_tableScrollTop', 0);
-    this.elementSizeDidChange();
-    this.doForceFillColumns();
-  },
+    // TODO(new-api): eliminate view alias
+    // specify the view class to use for rendering the table rows
+    tableRowView: 'table-row',
+    tableRowViewClass: Ember.computed.alias('tableRowView'),
 
-  onResizeEnd: function() {
-    // We need to put this on the run loop, because resize event came from
-    // window. Otherwise, we get this warning when used in tests. You have
-    // turned on testing mode, which disabled the run-loop's autorun. You
-    // will need to wrap any code with asynchronous side-effects in an
-    // Ember.run
-    if (this.tableWidthNowTooSmall()) {
-      this.set('columnsFillTable', true);
-    }
-    return Ember.run(this, this.elementSizeDidChange);
-  },
+    onColumnSort: function (column, newIndex) {
+      // Fixed columns are not affected by column reordering
+      var numFixedColumns = this.get('fixedColumns.length');
+      var columns = this.get('columns');
+      if (columns.indexOf(column) !== -1) {
+        console.log("Top columns contains this column " + newIndex);
+        columns.removeObject(column);
+        console.log("after remove " + columns.length);
 
-  elementSizeDidChange: function() {
-    if ((this.get('_state') || this.get('state')) !== 'inDOM') {
-      return;
-    }
-    this.set('_width', this.$().parent().outerWidth());
-    this.set('_height', this.$().parent().outerHeight());
-    // we need to wait for the table to be fully rendered before antiscroll can
-    // be used
-    return Ember.run.next(this, this.updateLayout);
-  },
+        columns.insertAt(numFixedColumns + newIndex, column);
+        console.log("Insert after remove: " + columns.length);
+      }
+      else {
+        console.log("Top columns not contains this column");
+        Ember.A(columns)
+          .filterBy('isGroup', true)
+          .invoke('reorder', newIndex, column);
+        this.set("_innerColumnReordered", !this.get('_innerColumnReordered'));
+        console.log("Not contains :" + this.get('columns').length);
+      }
+      return this.prepareTableColumns();
+    },
 
-  tableWidthNowTooSmall: function() {
-    if ((this.get('_state') || this.get('state')) !== 'inDOM') {
-      return false;
-    }
-    var oldTableWidth = this.get('_width');
-    var newTableWidth = this.$().parent().outerWidth();
-    // TODO(azirbel): This should be 'columns', I believe. Fix separately.
-    var totalColumnWidth = this._getTotalWidth(this.get('tableColumns'));
-    return (oldTableWidth > totalColumnWidth) && (newTableWidth < totalColumnWidth);
-  },
-
-  updateLayout: function() {
-    if ((this.get('_state') || this.get('state')) !== 'inDOM') {
-      return;
-    }
-    // update antiscroll
-    this.$('.antiscroll-wrap').antiscroll().data('antiscroll').rebuild();
-    if (this.get('columnsFillTable')) {
-      return this.doForceFillColumns();
-    }
-  },
-
-  // Iteratively adjusts column widths to adjust to a changed table width.
-  // Attempts to scale columns proportionally. However, if a column hits a min
-  // or max width after scaling proportionally, we need to respect that setting.
-  // In that case, keep iterating until all column widths are set to the best
-  // they can be. Note that this may fail to arrive at the table width if the
-  // resizable columns are all restricted by min/max widths.
-  doForceFillColumns: function() {
-    var allColumns = this.get('columns');
-    var columnsToResize = allColumns.filterProperty('canAutoResize');
-    var unresizableColumns = allColumns.filterProperty('canAutoResize', false);
-    var availableWidth = this.get('_width') - this._getTotalWidth(unresizableColumns);
-    var doNextLoop = true;
-    var nextColumnsToResize = [];
-    var totalResizableWidth;
-    var newWidth;
-
-    while (doNextLoop) {
-      doNextLoop = false;
-      nextColumnsToResize = [];
-      totalResizableWidth = this._getTotalWidth(columnsToResize);
-      /*jshint loopfunc:true */
-      // TODO(azirbel): Revisit JSHint error above
-      columnsToResize.forEach(function(column) {
-        newWidth = Math.floor((column.get('width') / totalResizableWidth) * availableWidth);
-        if (newWidth < column.get('minWidth')) {
-          doNextLoop = true;
-          column.set('width', column.get('minWidth'));
-          return availableWidth -= column.get('width');
-        } else if (newWidth > column.get('maxWidth')) {
-          doNextLoop = true;
-          column.set('width', column.get('maxWidth'));
-          return availableWidth -= column.get('width');
-        } else {
-          column.set('width', newWidth);
-          return nextColumnsToResize.pushObject(column);
-        }
+    // An array of Ember.Table.Row computed based on `content`
+    bodyContent: Ember.computed(function () {
+      return RowArrayController.create({
+        target: this,
+        parentController: this,
+        container: this.get('container'),
+        itemController: TableRow,
+        content: this.get('content')
       });
-    }
-  },
+    }).property('content.[]', '_reloadBody'),
 
-  onBodyContentLengthDidChange: Ember.observer(function() {
-    return Ember.run.next(this, function() {
-      return Ember.run.once(this, this.updateLayout);
-    });
-  }, 'bodyContent.length'),
+    // An array of Ember.Table.Row
+    footerContent: Ember.computed(function (key, value) {
+      if (value) {
+        return value;
+      } else {
+        return Ember.A();
+      }
+    }).property(),
 
-  // ---------------------------------------------------------------------------
-  // Private variables
-  // ---------------------------------------------------------------------------
+    fixedColumns: Ember.computed(function () {
+      var columns = this.get('columns');
+      if (!columns) {
+        return Ember.A();
+      }
+      var numFixedColumns = this.get('numFixedColumns') || 0;
+      return columns.slice(0, numFixedColumns) || [];
+    }).property('columns.@each', 'numFixedColumns'),
 
-  _tableScrollTop: 0,
-  _tableScrollLeft: 0,
-  _innerColumnReordered: false,
+    tableColumns: Ember.computed(function () {
+      console.log('tableColumns ' + this.get('columns').length);
+      var columns = this.get('_flattenedColumns') || this.get('columns');
+      if (!columns) {
+        return Ember.A();
+      }
+      var numFixedColumns = this.get('numFixedColumns') || 0;
+      return columns.slice(numFixedColumns, columns.get('length')) || [];
+    }).property('columns.@each', 'columns.[]', 'numFixedColumns', "_innerColumnReordered"),
 
-  _width: null,
-  _height: null,
-  _contentHeaderHeight: null,
+    prepareTableColumns: function () {
+      var _this = this;
+      var columns = this.get('columns') || Ember.A();
+      columns.setEach('controller', this);
+      columns.forEach(function (col, i) {
+        col.set('nextResizableColumn', _this.getNextResizableColumn(columns, i));
+      });
+    },
 
-  _hasVerticalScrollbar: Ember.computed(function() {
-    var height = this.get('_height');
-    var contentHeight = this.get('_tableContentHeight') +
+    hasColumnGroup: function () {
+      return this.get('columns')
+        .getEach('innerColumns')
+        .any(function (i) {
+          return !!i;
+        });
+    }.property(),
+
+    _flattenedColumns: function () {
+      var columns;
+      if (this.get('hasColumnGroup')) {
+        columns = this.get('columns') || Ember.A();
+        this.set('columnGroups', columns);
+        return columns.reduce(function (result, col) {
+          var innerColumns = col.get('innerColumns');
+          if (innerColumns) {
+            return result.concat(innerColumns);
+          } else {
+            result.push(col);
+            return result;
+          }
+        }, []);
+      }
+    }.property('columns.@each', '_innerColumnReordered'),
+
+    getNextResizableColumn: function (columns, index) {
+      var column;
+      while (index < columns.length) {
+        index += 1;
+        column = columns.objectAt(index);
+        if (column != null && column.get('isResizable')) {
+          return column;
+        }
+      }
+      return null;
+    },
+
+    // ---------------------------------------------------------------------------
+    // View concerns
+    // ---------------------------------------------------------------------------
+
+    didInsertElement: function () {
+      this._super();
+      this.set('_tableScrollTop', 0);
+      this.elementSizeDidChange();
+      this.doForceFillColumns();
+    },
+
+    onResizeEnd: function () {
+      // We need to put this on the run loop, because resize event came from
+      // window. Otherwise, we get this warning when used in tests. You have
+      // turned on testing mode, which disabled the run-loop's autorun. You
+      // will need to wrap any code with asynchronous side-effects in an
+      // Ember.run
+      if (this.tableWidthNowTooSmall()) {
+        this.set('columnsFillTable', true);
+      }
+      return Ember.run(this, this.elementSizeDidChange);
+    },
+
+    elementSizeDidChange: function () {
+      if ((this.get('_state') || this.get('state')) !== 'inDOM') {
+        return;
+      }
+      this.set('_width', this.$().parent().outerWidth());
+      this.set('_height', this.$().parent().outerHeight());
+      // we need to wait for the table to be fully rendered before antiscroll can
+      // be used
+      return Ember.run.next(this, this.updateLayout);
+    },
+
+    tableWidthNowTooSmall: function () {
+      if ((this.get('_state') || this.get('state')) !== 'inDOM') {
+        return false;
+      }
+      var oldTableWidth = this.get('_width');
+      var newTableWidth = this.$().parent().outerWidth();
+      // TODO(azirbel): This should be 'columns', I believe. Fix separately.
+      var totalColumnWidth = this._getTotalWidth(this.get('tableColumns'));
+      return (oldTableWidth > totalColumnWidth) && (newTableWidth < totalColumnWidth);
+    },
+
+    updateLayout: function () {
+      if ((this.get('_state') || this.get('state')) !== 'inDOM') {
+        return;
+      }
+      // update antiscroll
+      this.$('.antiscroll-wrap').antiscroll().data('antiscroll').rebuild();
+      if (this.get('columnsFillTable')) {
+        return this.doForceFillColumns();
+      }
+    },
+
+    // Iteratively adjusts column widths to adjust to a changed table width.
+    // Attempts to scale columns proportionally. However, if a column hits a min
+    // or max width after scaling proportionally, we need to respect that setting.
+    // In that case, keep iterating until all column widths are set to the best
+    // they can be. Note that this may fail to arrive at the table width if the
+    // resizable columns are all restricted by min/max widths.
+    doForceFillColumns: function () {
+      var allColumns = this.get('columns');
+      var columnsToResize = allColumns.filterProperty('canAutoResize');
+      var unresizableColumns = allColumns.filterProperty('canAutoResize', false);
+      var availableWidth = this.get('_width') - this._getTotalWidth(unresizableColumns);
+      var doNextLoop = true;
+      var nextColumnsToResize = [];
+      var totalResizableWidth;
+      var newWidth;
+
+      while (doNextLoop) {
+        doNextLoop = false;
+        nextColumnsToResize = [];
+        totalResizableWidth = this._getTotalWidth(columnsToResize);
+        /*jshint loopfunc:true */
+        // TODO(azirbel): Revisit JSHint error above
+        columnsToResize.forEach(function (column) {
+          newWidth = Math.floor((column.get('width') / totalResizableWidth) * availableWidth);
+          if (newWidth < column.get('minWidth')) {
+            doNextLoop = true;
+            column.set('width', column.get('minWidth'));
+            return availableWidth -= column.get('width');
+          } else if (newWidth > column.get('maxWidth')) {
+            doNextLoop = true;
+            column.set('width', column.get('maxWidth'));
+            return availableWidth -= column.get('width');
+          } else {
+            column.set('width', newWidth);
+            return nextColumnsToResize.pushObject(column);
+          }
+        });
+      }
+    },
+
+    onBodyContentLengthDidChange: Ember.observer(function () {
+      return Ember.run.next(this, function () {
+        return Ember.run.once(this, this.updateLayout);
+      });
+    }, 'bodyContent.length'),
+
+    // ---------------------------------------------------------------------------
+    // Private variables
+    // ---------------------------------------------------------------------------
+
+    _tableScrollTop: 0,
+    _tableScrollLeft: 0,
+    _innerColumnReordered: false,
+
+    _width: null,
+    _height: null,
+    _contentHeaderHeight: null,
+
+    _hasVerticalScrollbar: Ember.computed(function () {
+      var height = this.get('_height');
+      var contentHeight = this.get('_tableContentHeight') +
         this.get('_headerHeight') + this.get('_footerHeight');
-    return height < contentHeight;
-  }).property('_height', '_tableContentHeight', '_headerHeight',
+      return height < contentHeight;
+    }).property('_height', '_tableContentHeight', '_headerHeight',
       '_footerHeight'),
 
-  _hasHorizontalScrollbar: Ember.computed(function() {
-    var contentWidth = this.get('_tableColumnsWidth');
-    var tableWidth = this.get('_width') - this.get('_fixedColumnsWidth');
-    return contentWidth > tableWidth;
-  }).property('_tableColumnsWidth', '_width', '_fixedColumnsWidth'),
+    _hasHorizontalScrollbar: Ember.computed(function () {
+      var contentWidth = this.get('_tableColumnsWidth');
+      var tableWidth = this.get('_width') - this.get('_fixedColumnsWidth');
+      return contentWidth > tableWidth;
+    }).property('_tableColumnsWidth', '_width', '_fixedColumnsWidth'),
 
-  // tables-container height adjusts to the content height
-  _tablesContainerHeight: Ember.computed(function() {
-    var height = this.get('_height');
-    var contentHeight = this.get('_tableContentHeight') +
+    // tables-container height adjusts to the content height
+    _tablesContainerHeight: Ember.computed(function () {
+      var height = this.get('_height');
+      var contentHeight = this.get('_tableContentHeight') +
         this.get('_headerHeight') + this.get('_footerHeight');
-    return Math.min(contentHeight, height);
-  }).property('_height', '_tableContentHeight', '_headerHeight',
+      return Math.min(contentHeight, height);
+    }).property('_height', '_tableContentHeight', '_headerHeight',
       '_footerHeight'),
 
-  // Actual width of the fixed columns
-  _fixedColumnsWidth: Ember.computed(function() {
-    return this._getTotalWidth(this.get('fixedColumns'));
-  }).property('fixedColumns.@each.width'),
+    // Actual width of the fixed columns
+    _fixedColumnsWidth: Ember.computed(function () {
+      return this._getTotalWidth(this.get('fixedColumns'));
+    }).property('fixedColumns.@each.width'),
 
-  // Actual width of the (non-fixed) columns
-  _tableColumnsWidth: Ember.computed(function() {
-    // Hack: We add 3px padding to the right of the table content so that we can
-    // reorder into the last column.
-    var contentWidth = this._getTotalWidth(this.get('tableColumns')) + 3;
-    var availableWidth = this.get('_width') - this.get('_fixedColumnsWidth');
-    return Math.max(contentWidth, availableWidth);
-  }).property('tableColumns.@each.width', '_width', '_fixedColumnsWidth'),
+    // Actual width of the (non-fixed) columns
+    _tableColumnsWidth: Ember.computed(function () {
+      // Hack: We add 3px padding to the right of the table content so that we can
+      // reorder into the last column.
+      var contentWidth = this._getTotalWidth(this.get('tableColumns')) + 3;
+      var availableWidth = this.get('_width') - this.get('_fixedColumnsWidth');
+      return Math.max(contentWidth, availableWidth);
+    }).property('tableColumns.@each.width', '_width', '_fixedColumnsWidth'),
 
-  _rowWidth: Ember.computed(function() {
-    var columnsWidth = this.get('_tableColumnsWidth');
-    var nonFixedTableWidth = this.get('_tableContainerWidth') -
+    _rowWidth: Ember.computed(function () {
+      var columnsWidth = this.get('_tableColumnsWidth');
+      var nonFixedTableWidth = this.get('_tableContainerWidth') -
         this.get('_fixedColumnsWidth');
-    return Math.max(columnsWidth, nonFixedTableWidth);
-  }).property('_fixedColumnsWidth', '_tableColumnsWidth',
+      return Math.max(columnsWidth, nonFixedTableWidth);
+    }).property('_fixedColumnsWidth', '_tableColumnsWidth',
       '_tableContainerWidth'),
 
-  // Dynamic header height that adjusts according to the header content height
-  _headerHeight: Ember.computed(function() {
-    var minHeight = this.get('minHeaderHeight');
-    var contentHeaderHeight = this.get('_contentHeaderHeight');
-    return Math.max(contentHeaderHeight, minHeight);
-  }).property('_contentHeaderHeight', 'minHeaderHeight'),
+    // Dynamic header height that adjusts according to the header content height
+    _headerHeight: Ember.computed(function () {
+      var minHeight = this.get('minHeaderHeight');
+      var contentHeaderHeight = this.get('_contentHeaderHeight');
+      return Math.max(contentHeaderHeight, minHeight);
+    }).property('_contentHeaderHeight', 'minHeaderHeight'),
 
-  // Dynamic footer height that adjusts according to the footer content height
-  _footerHeight: Ember.computed(function() {
-    return this.get('hasFooter') ? this.get('footerHeight') : 0;
-  }).property('footerHeight', 'hasFooter'),
+    // Dynamic footer height that adjusts according to the footer content height
+    _footerHeight: Ember.computed(function () {
+      return this.get('hasFooter') ? this.get('footerHeight') : 0;
+    }).property('footerHeight', 'hasFooter'),
 
-  _bodyHeight: Ember.computed(function() {
-    var bodyHeight = this.get('_tablesContainerHeight');
-    if (this.get('hasHeader')) {
-      bodyHeight -= this.get('_headerHeight');
-    }
-    if (this.get('hasFooter')) {
-      bodyHeight -= this.get('footerHeight');
-    }
-    return bodyHeight;
-  }).property('_tablesContainerHeight', '_hasHorizontalScrollbar',
+    _bodyHeight: Ember.computed(function () {
+      var bodyHeight = this.get('_tablesContainerHeight');
+      if (this.get('hasHeader')) {
+        bodyHeight -= this.get('_headerHeight');
+      }
+      if (this.get('hasFooter')) {
+        bodyHeight -= this.get('footerHeight');
+      }
+      return bodyHeight;
+    }).property('_tablesContainerHeight', '_hasHorizontalScrollbar',
       '_headerHeight', 'footerHeight', 'hasHeader', 'hasFooter'),
 
-  _tableBlockWidth: Ember.computed(function() {
-    return this.get('_width') - this.get('_fixedColumnsWidth');
-  }).property('_width', '_fixedColumnsWidth'),
+    _tableBlockWidth: Ember.computed(function () {
+      return this.get('_width') - this.get('_fixedColumnsWidth');
+    }).property('_width', '_fixedColumnsWidth'),
 
-  _fixedBlockWidthBinding: '_fixedColumnsWidth',
+    _fixedBlockWidthBinding: '_fixedColumnsWidth',
 
-  _tableContentHeight: Ember.computed(function() {
-    return this.get('rowHeight') * this.get('bodyContent.length');
-  }).property('rowHeight', 'bodyContent.length'),
+    _tableContentHeight: Ember.computed(function () {
+      return this.get('rowHeight') * this.get('bodyContent.length');
+    }).property('rowHeight', 'bodyContent.length'),
 
-  _tableContainerWidth: Ember.computed(function() {
-    return this.get('_width');
-  }).property('_width'),
+    _tableContainerWidth: Ember.computed(function () {
+      return this.get('_width');
+    }).property('_width'),
 
-  _scrollContainerWidth: Ember.computed(function() {
-    return this.get('_width') - this.get('_fixedColumnsWidth');
-  }).property('_width', '_fixedColumnsWidth'),
+    _scrollContainerWidth: Ember.computed(function () {
+      return this.get('_width') - this.get('_fixedColumnsWidth');
+    }).property('_width', '_fixedColumnsWidth'),
 
-  _numItemsShowing: Ember.computed(function() {
-    return Math.floor(this.get('_bodyHeight') / this.get('rowHeight'));
-  }).property('_bodyHeight', 'rowHeight'),
+    _numItemsShowing: Ember.computed(function () {
+      return Math.floor(this.get('_bodyHeight') / this.get('rowHeight'));
+    }).property('_bodyHeight', 'rowHeight'),
 
-  _startIndex: Ember.computed(function() {
-    var numContent = this.get('bodyContent.length');
-    var numViews = this.get('_numItemsShowing');
-    var rowHeight = this.get('rowHeight');
-    var scrollTop = this.get('_tableScrollTop');
-    var index = Math.floor(scrollTop / rowHeight);
-    // Adjust start index so that end index doesn't exceed content length
-    if (index + numViews >= numContent) {
-      index = numContent - numViews;
-    }
-    return Math.max(index, 0);
-  }).property('bodyContent.length', '_numItemsShowing', 'rowHeight',
+    _startIndex: Ember.computed(function () {
+      var numContent = this.get('bodyContent.length');
+      var numViews = this.get('_numItemsShowing');
+      var rowHeight = this.get('rowHeight');
+      var scrollTop = this.get('_tableScrollTop');
+      var index = Math.floor(scrollTop / rowHeight);
+      // Adjust start index so that end index doesn't exceed content length
+      if (index + numViews >= numContent) {
+        index = numContent - numViews;
+      }
+      return Math.max(index, 0);
+    }).property('bodyContent.length', '_numItemsShowing', 'rowHeight',
       '_tableScrollTop'),
 
-  _getTotalWidth: function(columns, columnWidthPath) {
-    if (columnWidthPath == null) {
-      columnWidthPath = 'width';
-    }
-    if (!columns) {
-      return 0;
-    }
-    var widths = columns.getEach(columnWidthPath) || [];
-    return widths.reduce((function(total, w) {
-      return total + w;
-    }), 0);
-  },
-
-  // ---------------------------------------------------------------------------
-  // Selection
-  // TODO: Make private or reorganize into a new section
-  // ---------------------------------------------------------------------------
-
-  lastSelected: null,
-
-  isSelected: function(row) {
-    switch (this.get('selectionMode')) {
-      case 'none':
-        return false;
-      case 'single':
-        return this.get('selection') === row.get('content');
-      case 'multiple':
-        return this.get('selection').contains(row.get('content'));
-    }
-  },
-
-  setSelected: function(row, val) {
-    this.persistSelection();
-    var item = row.get('content');
-    if (val) {
-      return this.get('persistedSelection').addObject(item);
-    } else {
-      return this.get('persistedSelection').removeObject(item);
-    }
-  },
-
-  // items that were selected directly or as part of a previous
-  // range selection (shift-click)
-  persistedSelection: Ember.computed(function() {
-    return Ember.A();
-  }),
-
-  // items that are part of the currently editable range selection
-  rangeSelection: Ember.computed(function() {
-    return Ember.A();
-  }),
-
-  // TODO: Handle click event in the row view
-  click: function(event) {
-    var row = this.getRowForEvent(event);
-    if (!row || !row.get('content')) {
-      return;
-    }
-    var item = row.get('content');
-    switch (this.get('selectionMode')) {
-      case 'none':
-        break;
-      case 'single':
-        this.get('persistedSelection').clear();
-        this.get('persistedSelection').addObject(item);
-        break;
-      case 'multiple':
-        if (event.shiftKey) {
-          this.get('rangeSelection').clear();
-
-          var lastIndex = this.rowIndex(this.get('lastSelected'));
-          // If the last selected row is no longer in the table, use the
-          // first row in the table
-          if (lastIndex === -1) {
-            lastIndex = 0;
-          }
-
-          var curIndex = this.rowIndex(this.getRowForEvent(event));
-          var minIndex = Math.min(lastIndex, curIndex);
-          var maxIndex = Math.max(lastIndex, curIndex);
-
-          this.get('rangeSelection').addObjects(
-            this.get('bodyContent').slice(minIndex, maxIndex + 1)
-              .mapBy('content'));
-        } else {
-          if (!event.ctrlKey && !event.metaKey) {
-            this.get('persistedSelection').clear();
-            this.get('rangeSelection').clear();
-          } else {
-            this.persistSelection();
-          }
-          if (this.get('persistedSelection').contains(item)) {
-            this.get('persistedSelection').removeObject(item);
-          } else {
-            this.get('persistedSelection').addObject(item);
-          }
-          this.set('lastSelected', row);
-        }
-        break;
-    }
-  },
-
-  findRow: function(content) {
-    // TODO(azirbel): Replace with filter
-    this.get('bodyContent').forEach(function(row) {
-      if (row.get('content') === content) {
-        return row;
+    _getTotalWidth: function (columns, columnWidthPath) {
+      if (columnWidthPath == null) {
+        columnWidthPath = 'width';
       }
-    });
-    return null;
-  },
+      if (!columns) {
+        return 0;
+      }
+      var widths = columns.getEach(columnWidthPath) || [];
+      return widths.reduce((function (total, w) {
+        return total + w;
+      }), 0);
+    },
 
-  rowIndex: function(row) {
-    if (!this.get('bodyContent')) {
+    // ---------------------------------------------------------------------------
+    // Selection
+    // TODO: Make private or reorganize into a new section
+    // ---------------------------------------------------------------------------
+
+    lastSelected: null,
+
+    isSelected: function (row) {
+      switch (this.get('selectionMode')) {
+        case 'none':
+          return false;
+        case 'single':
+          return this.get('selection') === row.get('content');
+        case 'multiple':
+          return this.get('selection').contains(row.get('content'));
+      }
+    },
+
+    setSelected: function (row, val) {
+      this.persistSelection();
+      var item = row.get('content');
+      if (val) {
+        return this.get('persistedSelection').addObject(item);
+      } else {
+        return this.get('persistedSelection').removeObject(item);
+      }
+    },
+
+    // items that were selected directly or as part of a previous
+    // range selection (shift-click)
+    persistedSelection: Ember.computed(function () {
+      return Ember.A();
+    }),
+
+    // items that are part of the currently editable range selection
+    rangeSelection: Ember.computed(function () {
+      return Ember.A();
+    }),
+
+    // TODO: Handle click event in the row view
+    click: function (event) {
+      var row = this.getRowForEvent(event);
+      if (!row || !row.get('content')) {
+        return;
+      }
+      var item = row.get('content');
+      switch (this.get('selectionMode')) {
+        case 'none':
+          break;
+        case 'single':
+          this.get('persistedSelection').clear();
+          this.get('persistedSelection').addObject(item);
+          break;
+        case 'multiple':
+          if (event.shiftKey) {
+            this.get('rangeSelection').clear();
+
+            var lastIndex = this.rowIndex(this.get('lastSelected'));
+            // If the last selected row is no longer in the table, use the
+            // first row in the table
+            if (lastIndex === -1) {
+              lastIndex = 0;
+            }
+
+            var curIndex = this.rowIndex(this.getRowForEvent(event));
+            var minIndex = Math.min(lastIndex, curIndex);
+            var maxIndex = Math.max(lastIndex, curIndex);
+
+            this.get('rangeSelection').addObjects(
+              this.get('bodyContent').slice(minIndex, maxIndex + 1)
+                .mapBy('content'));
+          } else {
+            if (!event.ctrlKey && !event.metaKey) {
+              this.get('persistedSelection').clear();
+              this.get('rangeSelection').clear();
+            } else {
+              this.persistSelection();
+            }
+            if (this.get('persistedSelection').contains(item)) {
+              this.get('persistedSelection').removeObject(item);
+            } else {
+              this.get('persistedSelection').addObject(item);
+            }
+            this.set('lastSelected', row);
+          }
+          break;
+      }
+    },
+
+    findRow: function (content) {
+      // TODO(azirbel): Replace with filter
+      this.get('bodyContent').forEach(function (row) {
+        if (row.get('content') === content) {
+          return row;
+        }
+      });
+      return null;
+    },
+
+    rowIndex: function (row) {
+      if (!this.get('bodyContent')) {
+        return null;
+      }
+      return this.get('bodyContent').indexOf(row);
+    },
+
+    persistSelection: function () {
+      this.get('persistedSelection').addObjects(this.get('rangeSelection'));
+      this.get('rangeSelection').clear();
+    },
+
+    getRowForEvent: function (event) {
+      var $rowView = Ember.$(event.target).parents('.ember-table-table-row');
+      var view = Ember.View.views[$rowView.attr('id')];
+      if (view) {
+        return view.get('row');
+      }
       return null;
     }
-    return this.get('bodyContent').indexOf(row);
-  },
-
-  persistSelection: function() {
-    this.get('persistedSelection').addObjects(this.get('rangeSelection'));
-    this.get('rangeSelection').clear();
-  },
-
-  getRowForEvent: function(event) {
-    var $rowView = Ember.$(event.target).parents('.ember-table-table-row');
-    var view = Ember.View.views[$rowView.attr('id')];
-    if (view) {
-      return view.get('row');
-    }
-    return null;
-  }
-});
+  });

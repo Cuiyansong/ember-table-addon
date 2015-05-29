@@ -3,7 +3,7 @@ import HeaderBlock from '../views/header-block';
 
 export default HeaderBlock.extend({
 
-  classNameBindings: [ 'columnGroup.groupStyle' ],
+  classNameBindings: ['columnGroup.isSortable:sortable', 'columnGroup.groupStyle'],
 
   width: Ember.computed.alias('columnGroup.savedWidth'),
 
